@@ -48,13 +48,6 @@ function buildPrompt(form) {
       mood:
         form.sceneMood || "luxury, elegant, modern, minimalistic",
     },
-    branding: {
-      logo: form.brandingLogo || "no visible logo",
-      text_overlay:
-        form.brandingTextOverlay || "Luxury Collection 2026",
-      font_style:
-        form.brandingFontStyle || "modern minimal sans-serif",
-    },
     output: {
       aspect_ratio: form.aspectRatio || "1:1",
       quality: form.quality || "ultra high",
@@ -63,6 +56,31 @@ function buildPrompt(form) {
     },
   };
 
+  // If model is included, use simplified format (no branding, camera, composition, or props)
+  if (form.includeModel) {
+    data.model = {
+      include_model: true,
+      gender: form.modelGender || "female",
+      age: form.modelAge || "25",
+      ethnicity: form.modelEthnicity || "",
+      pose: form.modelPose || "",
+      expression: form.modelExpression || "",
+      clothing_style: form.modelClothingStyle || "",
+    };
+    // Simplified format: no branding, camera, composition, or props when model is included
+    return data;
+  }
+
+  // If model is NOT included, include branding and optional camera/composition
+  data.branding = {
+    logo: form.brandingLogo || "no visible logo",
+    text_overlay:
+      form.brandingTextOverlay || "Luxury Collection 2026",
+    font_style:
+      form.brandingFontStyle || "modern minimal sans-serif",
+  };
+
+  // Add scene props only if model is not included
   if (form.sceneProps) {
     const parts = Array.isArray(form.sceneProps)
       ? form.sceneProps.filter(Boolean)
@@ -75,19 +93,8 @@ function buildPrompt(form) {
     }
   }
 
-  if (form.includeModel) {
-    data.model = {
-      include_model: true,
-      gender: form.modelGender || "female",
-      age: form.modelAge || "25",
-      ethnicity: form.modelEthnicity || "",
-      pose: form.modelPose || "",
-      expression: form.modelExpression || "",
-      clothing_style: form.modelClothingStyle || "",
-    };
-  }
-
-  if (form.advancedCamera) {
+  // Add camera and composition only if advanced camera is enabled and model is NOT included
+  if (form.advancedCamera && !form.includeModel) {
     data.camera = {
       type: form.cameraType || "DSLR commercial photography",
       lens: form.cameraLens || "85mm portrait lens",
